@@ -35,3 +35,52 @@ pub fn pkcs7_pad(data: &mut Vec<u8>, block_size: usize) -> Result<(), Box<dyn Er
 
     Ok(())
 }
+
+/// Remove PKCS#7 padding from a given byte array, in-place.
+///
+/// This function inspects and removes the PKCS#7 padding from the provided
+/// byte array. It checks the value of the last byte of the array (which
+/// indicates the padding size), verifies that the padding is consistent, and
+/// then removes the padding bytes.
+///
+/// # Arguments
+///
+/// * `data` : A mutable reference to the byte array (`Vec<u8>`) from which
+///            padding is to be removed. The data is manipulated directly, with
+///            padding bytes being removed in place.
+///
+/// # Returns
+///
+/// * `Ok(())` if the unpadding is successfully performed,
+/// * `Err(Box<dyn Error>)` if there's an issue with the padding (e.g.,
+///    inconsistent padding bytes, invalid padding size, or empty input data).
+pub fn pkcs7_unpad(data: &mut Vec<u8>) -> Result<(), Box<dyn Error>> {
+    if data.is_empty() {
+        return Err("PKCS7 UNPADDING ERROR: Input data is empty".into());
+    }
+
+    let padding_byte = *data
+        .last()
+        .ok_or("PKCS7 UNPADDING ERROR: Unable to get the last byte")?
+        as usize;
+
+    // Check if padding_byte is within valid range (1 to data.len())
+    if padding_byte == 0 || padding_byte > data.len() {
+        return Err("PKCS7 UNPADDING ERROR: Invalid padding".into());
+    }
+
+    // Verify that all the padding bytes are the same
+    if data
+        .iter()
+        .rev()
+        .take(padding_byte)
+        .any(|&x| x as usize != padding_byte)
+    {
+        return Err("PKCS7 UNPADDING ERROR: Padding bytes are not consistent".into());
+    }
+
+    // Remove the padding bytes
+    data.truncate(data.len() - padding_byte);
+
+    Ok(())
+}

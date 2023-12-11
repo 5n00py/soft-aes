@@ -308,3 +308,77 @@ fn inv_sub_bytes(state: &mut [[u8; 4]; 4]) {
         }
     }
 }
+
+/// Perform the ShiftRows transformation for AES encryption.
+///
+/// This function cyclically shifts the rows of the state matrix to the left.
+/// Each row is shifted by a different offset depending on its index.
+///
+/// # Parameters
+///
+/// * `state`: The current state of the cipher, represented as a mut 2D array.
+///
+/// # Note
+///
+/// The state is modified in place with each row shifted accordingly.
+fn shift_rows(state: &mut [[u8; 4]; 4]) {
+    // Rotate the second row 1 column to the left
+    let temp = state[1][0];
+    state[1][0] = state[1][1];
+    state[1][1] = state[1][2];
+    state[1][2] = state[1][3];
+    state[1][3] = temp;
+
+    // Rotate the third row 2 columns to the left
+    let temp = state[2][0];
+    state[2][0] = state[2][2];
+    state[2][2] = temp;
+
+    let temp = state[2][1];
+    state[2][1] = state[2][3];
+    state[2][3] = temp;
+
+    // Rotate the fourth row 3 columns to the left
+    let temp = state[3][0];
+    state[3][0] = state[3][3];
+    state[3][3] = state[3][2];
+    state[3][2] = state[3][1];
+    state[3][1] = temp;
+}
+
+/// Perform the InvShiftRows transformation for AES decryption.
+///
+/// This function cyclically shifts the rows of the state matrix to the right.
+/// Each row is shifted by a different offset depending on its index.
+///
+/// # Parameters
+///
+/// * `state`: The current state of the cipher, represented as a mut 2D array.
+///
+/// # Note
+///
+/// The state is modified in place with each row shifted accordingly.
+fn inv_shift_rows(state: &mut [[u8; 4]; 4]) {
+    // Rotate first row 1 columns to right
+    let temp = state[1][3];
+    state[1][3] = state[1][2];
+    state[1][2] = state[1][1];
+    state[1][1] = state[1][0];
+    state[1][0] = temp;
+
+    // Rotate second row 2 columns to right
+    let temp = state[2][0];
+    state[2][0] = state[2][2];
+    state[2][2] = temp;
+
+    let temp = state[2][1];
+    state[2][1] = state[2][3];
+    state[2][3] = temp;
+
+    // Rotate third row 3 columns to right
+    let temp = state[3][0];
+    state[3][0] = state[3][1];
+    state[3][1] = state[3][2];
+    state[3][2] = state[3][3];
+    state[3][3] = temp;
+}

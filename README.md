@@ -120,4 +120,88 @@ an invaluable tool for understanding and debugging the AES implementation.
   reliability and compliance with NIST guidelines. Contributions and
   suggestions for additional tests or improvements are always welcome.
 
+## Disclaimer
 
+- **ECB Mode Limitations:** The ECB (Electronic Codebook) mode of AES does not
+  ensure confidentiality for data with recognizable patterns. Consequently, its
+  use should be limited to specific cases where data patterns are not a
+  concern.
+  
+- **CBC Mode Considerations:** While AES CBC (Cipher Block Chaining) mode
+  significantly enhances security over ECB mode, it requires careful management
+  of the Initialization Vector (IV). IVs should be random and unique for each
+  encryption session to maintain security.
+
+- **Cryptographic Randomness:** This library does not include its own
+  cryptographic random number generators. Users should ensure the use of proper
+  cryptographic random number generators, especially when generating keys and
+  IVs for cryptographic operations.
+
+- **Key Management:** Effective key management practices are essential for
+  maintaining security. This library does not manage or store cryptographic
+  keys. Users are responsible for managing keys securely, including their
+  generation, storage, and destruction.
+
+- **No Protection Against Side-Channel Attacks:** The current implementation of
+  this library does not include specific countermeasures against side-channel
+  attacks. It is intended primarily for educational use and non-critical
+  applications where side-channel resistance is not a primary concern.
+
+- **"As Is" Provision:** The library is provided "as is," without any warranty
+  of any kind. The developers are not liable for any consequences arising from
+  the use or misuse of this library. Users are encouraged to assess the
+  suitability of this library for their intended applications.
+
+This disclaimer aims to highlight critical areas of cryptographic practice that
+are beyond the scope of this library but are nonetheless integral to the secure
+deployment of cryptographic algorithms.
+
+## Official Standard References
+
+- AES is defined in [FIPS PUB 197](https://csrc.nist.gov/pubs/fips/197/final).
+
+- PKCS#7 padding is defined in [RFC
+  2315](https://www.rfc-editor.org/rfc/rfc2315).
+
+## Acknowledgments
+
+The development of the Soft-AES library is a culmination of knowledge,
+resources, and tools that have significantly influenced its design and
+implementation. This section extends gratitude to various contributions and
+inspirations that have shaped the library.
+
+The Rust implementation of Soft-AES is fundamentally based on a C
+implementation I implemented during my studies, primarily guided by the book "The
+Design of Rijndael" and its reference code. The updated insights from "The
+Design of Rijndael: AES - The Advanced Encryption Standard" by Joan Daemen and
+Vincent Rijmen.
+
+A notable modification in the Rust implementation, compared to the original C
+version, is the key expansion routine. In the Rust library, the key expansion
+is executed directly on a byte buffer, adhering to the (MAX_ROUNDS+1)x4x4 array
+structure traditionally specified in AES documentation. This adjustment
+reflects suggestions from other C implementations and is optimized for
+efficiency within the Rust context.
+
+Further Assistance:
+
+- AI Assistance: In documenting, commenting, and troubleshooting aspects of the
+  library, AI tools have played a supportive role. Their use has been
+  particularly valuable in ensuring clarity, coherence, and consistency in the
+  library's documentation.
+
+- [SmartCommit](https://github.com/5n00py/SmartCommit): The development process
+  has been augmented with the use of SmartCommit, a semi-automated tool for
+  generating commit messages. This tool has enhanced the efficiency and
+  consistency of the development workflow, ensuring that each change is
+  accurately and comprehensively documented.
+
+## Contributing
+
+Contributions to the Soft-AES library are welcome. Please ensure that your code
+adheres to the existing style and that all tests pass.
+
+## License
+
+This project is licensed under the GNU General Public License Version 3
+(GPLv3), as detailed in the [LICENSE](LICENSE) file.

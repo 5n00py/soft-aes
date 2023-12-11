@@ -15,6 +15,23 @@ scenarios where such advanced protections are not a primary concern.
 Additionally, the library includes support for PKCS#7 padding, making it
 suitable for a range of cryptographic applications.
 
+## Table of Contents
+
+- [Features](#features)
+- [Usage](#usage)
+  - [AES ECB Mode](#aes-ecb-mode)
+  - [AES CBC Mode](#aes-cbc-mode)
+  - [PKCS#7 Padding](#pkcs7-padding)
+- [Testing](#testing)
+  - [Current NIST Test Coverage](#current-nist-test-coverage)
+  - [Core Unit Tests](#core-unit-tests)
+  - [Future Test Expansion](#future-test-expansion)
+- [Disclaimer](#disclaimer)
+- [Official Standard References](#official-standard-references)
+- [Acknowledgments](#acknowledgments)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Features
 
 - **AES Core:** Core implementations for both encryption and decryption

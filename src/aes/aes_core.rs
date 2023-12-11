@@ -604,3 +604,60 @@ pub fn aes_enc_block(
 
     Ok(copy_state_to_block(&state))
 }
+
+/// Decrypt a single block using the AES algorithm.
+///
+/// This function handles AES decryption for a single block of ciphertext using
+/// the specified key. It supports key sizes for AES-128, AES-192, and AES-256,
+/// which are determined by the length of the key provided.
+///
+/// # Parameters
+///
+/// * `ciphertext`: A reference to a 16-byte array representing the encrypted
+///                 block to be decrypted.
+/// * `key`: A reference to a byte slice representing the decryption key. The
+///          length of this slice determines the key size: 16 bytes for AES-128,
+///          24 bytes for AES-192, and 32 bytes for AES-256.
+///
+/// # Returns
+///
+/// * `Ok([u8; AES_BLOCK_SIZE])` - A 16-byte array representing the decrypted
+///    plaintext block.
+/// * `Err(Box<dyn Error>)` - If the key length is invalid.
+///
+/// # Errors
+///
+/// This function will return an error if:
+/// - The key length is not one of the valid AES key sizes (16, 24, or 32 bytes).
+pub fn aes_dec_block(
+    ciphertext: &[u8; AES_BLOCK_SIZE],
+    key: &[u8],
+) -> Result<[u8; AES_BLOCK_SIZE], Box<dyn Error>> {
+    let key_len = key.len();
+
+    validate_key_len(key_len)?;
+
+    let (nk, nr) = calculate_parameters(key_len);
+
+    let mut state = copy_block_to_state(ciphertext);
+
+    let expanded_key = expand_key(key, nk, nr);
+
+    // Add the last round key to the state before starting the rounds
+    add_round_key(nr, &mut state, &expanded_key);
+
+    // Main rounds
+    for round in (1..nr).rev() {
+        inv_shift_rows(&mut state);
+        inv_sub_bytes(&mut state);
+        add_round_key(round, &mut state, &expanded_key);
+        inv_mix_columns(&mut state);
+    }
+
+    // Final round (without inv_mix_columns)
+    inv_shift_rows(&mut state);
+    inv_sub_bytes(&mut state);
+    add_round_key(0, &mut state, &expanded_key);
+
+    Ok(copy_state_to_block(&state))
+}

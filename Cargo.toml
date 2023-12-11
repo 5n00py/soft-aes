@@ -1,0 +1,9 @@
+[package]
+name = "soft-aes"
+version = "0.1.0"
+edition = "2021"
+authors = ["David Schmid <david.schmid@mailbox.org>"]
+description = "A Rust-based software library for AES."
+
+[dev-dependencies]
+hex = "0.4.3"

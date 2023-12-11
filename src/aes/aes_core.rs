@@ -447,3 +447,103 @@ fn inv_mix_columns(state: &mut [[u8; 4]; 4]) {
         state[3][i] = mul(a, 0x0b) ^ mul(b, 0x0d) ^ mul(c, 0x09) ^ mul(d, 0x0e);
     }
 }
+
+/// Copy a 16-byte block into a 4x4 state array.
+///
+/// # Parameters
+///
+/// * `block`: The input block, represented as a 16-byte array.
+///
+/// # Returns
+///
+/// A 4x4 state array filled with data from the block.
+fn copy_block_to_state(block: &[u8; AES_BLOCK_SIZE]) -> [[u8; 4]; 4] {
+    let mut state = [[0u8; 4]; 4];
+
+    for i in 0..4 {
+        for j in 0..4 {
+            state[j][i] = block[i * 4 + j];
+        }
+    }
+
+    state
+}
+
+/// Copy a 4x4 state array into a 16-byte block.
+///
+/// # Parameters
+///
+/// * `state`: The 4x4 state array.
+///
+/// # Returns
+///
+/// A 16-byte array representing the block.
+fn copy_state_to_block(state: &[[u8; 4]; 4]) -> [u8; AES_BLOCK_SIZE] {
+    let mut block = [0u8; AES_BLOCK_SIZE];
+
+    for i in 0..4 {
+        for j in 0..4 {
+            block[i * 4 + j] = state[j][i];
+        }
+    }
+
+    block
+}
+
+/// Calculate the number of 32-bit words in the key and the number of
+/// encryption rounds based on the key length for AES encryption.
+///
+/// # Parameters
+///
+/// * `key_length_bytes`: The length of the key in bytes (16, 24, or 32).
+///
+/// # Returns
+///
+/// A tuple containing the number of 32-bit words in the key and the number of
+/// encryption rounds.
+///
+/// # Panics
+///
+/// Panics if the key length is not one of the valid AES key lengths (128, 192,
+/// or 256 bits).
+fn calculate_parameters(key_length_bytes: usize) -> (usize, usize) {
+    let words_in_key = key_length_bytes / 4; // 1 word = 4 bytes
+    let encryption_rounds = match words_in_key {
+        4 => 10, // 128-bit key
+        6 => 12, // 192-bit key
+        8 => 14, // 256-bit key
+        _ => panic!(
+            "AES CORE PANIC: Invalid AES key length: {}",
+            key_length_bytes
+        ),
+    };
+
+    (words_in_key, encryption_rounds)
+}
+
+/// Validate the key length for AES encryption or decryption.
+///
+/// This function checks if the provided key lengths is suitable for AES. It
+/// must be one of the standard AES key sizes: 128 bits (16 bytes), 192 bits
+/// (24 bytes), or 256 bits (32 bytes).
+///
+/// # Parameters
+///
+/// * `key_len`: Length of the cipher key in bytes.
+///
+/// # Returns
+///
+/// * `Ok(())` - If the block and key are of valid lengths.
+/// * `Err(Box<dyn Error>)` - If the key length is invalid.
+fn validate_key_len(key_len: usize) -> Result<(), Box<dyn Error>> {
+    match key_len {
+        AES_128_KEY_SIZE | AES_192_KEY_SIZE | AES_256_KEY_SIZE => Ok(()),
+        _ => Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!(
+                "AES CORE ERROR: Invalid key length. Expected 16, 24, or 32 bytes, got {} bytes",
+                key_len,
+            ),
+        ))),
+    }
+}

@@ -140,3 +140,26 @@ const ALOG_TABLE: [u8; 256] = [
     0x12, 0x36, 0x5a, 0xee, 0x29, 0x7b, 0x8d, 0x8c, 0x8f, 0x8a, 0x85, 0x94, 0xa7, 0xf2, 0x0d, 0x17,
     0x39, 0x4b, 0xdd, 0x7c, 0x84, 0x97, 0xa2, 0xfd, 0x1c, 0x24, 0x6c, 0xb4, 0xc7, 0x52, 0xf6, 0x01,
 ];
+
+/// Multiply two elements of GF(256).
+///
+/// This function is required for MixColumns and InvMixColumns steps in the AES
+/// encryption and decryption process. It uses precomputed log and antilog
+/// tables to perform the multiplication in the finite field.
+///
+/// Parameters:
+///     a: u8 - The first element to multiply, represented as a byte.
+///     b: u8 - The second element to multiply, represented as a byte.
+///
+/// Returns:
+///     The product of the two elements in GF(256).
+fn mul(a: u8, b: u8) -> u8 {
+    if a != 0 && b != 0 {
+        let log_a = LOG_TABLE[a as usize] as usize;
+        let log_b = LOG_TABLE[b as usize] as usize;
+        let log_sum = (log_a + log_b) % 255; // Modulo 255 to keep within bounds
+        ALOG_TABLE[log_sum]
+    } else {
+        0
+    }
+}

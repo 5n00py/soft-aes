@@ -1,3 +1,85 @@
+//! AES Core Implementation
+//!
+//! This module provides core functionalities for the AES (Advanced Encryption
+//! Standard) algorithm. It includes implementations for both encryption and
+//! decryption processes along with the necessary auxiliary functions.
+//!
+//! The implementation follows a software-based approach, primarily utilizing
+//! lookup tables for operations such as S-box transformations. While the method
+//! ensures accuracy, it might not be optimized for high perfomance in terms of
+//! speed and memory usage.
+//!
+//! # Disclaimer
+//!
+//! This implementation is provided "as is", without warranty of any kind,
+//! express or implied. The author(s) or contributor(s) are not responsible for
+//! any consequences arising from the use or misuse of this code. Users are
+//! encouraged to understand and evaluate the suitability of this code for
+//! their purposes, especially in critical or sensitive systems.
+//!
+//! # Features
+//!
+//! - Supports AES-128, AES-192, and AES-256 key sizes.
+//! - Implements key expansion routine for generating round keys from the
+//!   initial cipher key.
+//! - Provides functions for each step of the AES algorithm, including:
+//!     - `sub_bytes` and `inv_sub_bytes` for the SubBytes and InvSubBytes
+//!        steps (byte substitution).
+//!     - `shift_rows` and `inv_shift_rows` for the ShiftRows and InvShiftRows
+//!        steps.
+//!     - `mix_columns` and `inv_mix_columns` for the MixColumns and
+//!        InvMixColumns steps.
+//!     - `add_round_key` for the AddRoundKey step.
+//! - Contains the main functions `aes_enc_block` and `aes_dec_block` for block
+//!   encryption and decryption.
+//!
+//! # Usage
+//!
+//! This module is intended to be used as part of a larger AES implementation.
+//! It handles the core operations of the AES algorithm but does not include
+//! modes of operation like ECB, CBC, etc. Users of this module need to handle
+//! padding, chaining, and other aspects relevant to their specific use case.
+//!
+//! # Examples
+//!
+//! Basic usage for encrypting and decrypting a single block for AES-128
+//!
+//! ```
+//! use crate::soft_aes::aes::{aes_enc_block, aes_dec_block, AES_BLOCK_SIZE, AES_128_KEY_SIZE};
+//!
+//! // Test vectors for AES-128
+//! let plaintext: [u8; AES_BLOCK_SIZE] = [
+//!     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+//!     0x00, 0x00,
+//! ];
+//! let key: [u8; AES_128_KEY_SIZE] = [
+//!     0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd,
+//!     0xee, 0xff,
+//! ];
+//! let expected_ciphertext: [u8; AES_BLOCK_SIZE] = [
+//!     0xfd, 0xe4, 0xfb, 0xae, 0x4a, 0x09, 0xe0, 0x20, 0xef, 0xf7, 0x22, 0x96, 0x9f, 0x83,
+//!     0x83, 0x2b,
+//! ];
+//!
+//! // Perform AES-128 encryption
+//! let ciphertext = aes_enc_block(&plaintext, &key).expect("Encryption failed");
+//! assert_eq!(ciphertext, expected_ciphertext);
+//!
+//! // Perform AES-128 decryption
+//! let decrypted = aes_dec_block(&ciphertext, &key).expect("Decryption failed");
+//! assert_eq!(decrypted, plaintext);
+//! ```
+//!
+//! # Notes
+//! - The test vectors used in unit tests are sourced from
+//!   https://www.cryptool.org/en/cto/aes-step-by-step.
+//! - The implementation follows the principles outlined in "The Design of
+//!   Rijndael: AES - The Advanced Encryption Standard" by Joan Daemen and
+//!   Vincent Rijmen, Second Edition, 2020. However, some modifications have
+//!   been made to adapt the algorithm to specific requirements.
+//! - Notably, the round keys are stored and managed using a fixed byte buffer
+//!   instead of a multi-dimensional array as traditionally specified.
+
 use std::error::Error;
 
 // AES block size is fixed at 16 bytes

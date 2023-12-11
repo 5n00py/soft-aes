@@ -1,3 +1,69 @@
+//! PKCS#7 Padding and Unpadding Module
+//!
+//! This module provides functionality for applying and removing PKCS#7 padding
+//! to and from byte arrays. PKCS#7 padding, defined in the PKCS#7 (Public Key
+//! Cryptography Standards #7) standard by RSA Laboratories, is commonly used
+//! in various cryptographic algorithms to ensure that data blocks are of a
+//! uniform size.
+//!
+//! The PKCS#7 standard defines a padding scheme that appends a set of bytes to
+//! the end of a data block. Each byte of the padding is set to the same value,
+//! which is equal to the number of padding bytes added. This module implements
+//! two primary functions:
+//!
+//! - `pkcs7_pad`: Applies PKCS#7 padding to a given byte array (`Vec<u8>`),
+//!   ensuring that its length is a multiple of a specified block size. The
+//!   function adds padding in place and is designed to be efficient and
+//!   straightforward to use.
+//!
+//! - `pkcs7_unpad`: Removes PKCS#7 padding from a given byte array (`Vec<u8>`),
+//!   verifying the consistency and correctness of the padding before removal.
+//!   This function also modifies the data in place and ensures that the
+//!   unpadding operation is secure and reliable.
+//!
+//! # Usage
+//!
+//! The module is designed to be easily integrated into cryptographic
+//! applications, particularly those involving block ciphers where data blocks
+//! need to be a specific size. The padding and unpadding operations are
+//! essential in scenarios where data must be encrypted and decrypted in a
+//! manner consistent with PKCS#7 standards.
+//!
+//! # Examples
+//!
+//! Basic usage examples demonstrating padding and unpadding a byte array:
+//!
+//! ```
+//! use soft_aes::padding::{pkcs7_pad, pkcs7_unpad};
+//!
+//! let mut data = vec![0x01, 0x02, 0x03];
+//! let block_size = 8;
+//! pkcs7_pad(&mut data, block_size).expect("Padding failed");
+//!
+//! // Data is now padded according to PKCS#7
+//! assert_eq!(data, vec![0x01, 0x02, 0x03, 0x05, 0x05, 0x05, 0x05, 0x05]);
+//!
+//! pkcs7_unpad(&mut data).expect("Unpadding failed");
+//!
+//! // Data is back to its original form
+//! assert_eq!(data, vec![0x01, 0x02, 0x03]);
+//! ```
+//!
+//! # Official Standard Reference
+//!
+//! - The PKCS#7 padding scheme is defined in the PKCS#7 standard, which is part
+//!   of the Public Key Cryptography Standards series. The standard is detailed
+//!   in the document "PKCS #7: Cryptographic Message Syntax Version 1.5",
+//!   paragraph 10.3. "Content-encryption process":
+//!   [https://www.rfc-editor.org/rfc/rfc2315](https://www.rfc-editor.org/rfc/rfc2315).
+//!
+//! # Note
+//!
+//! - The implementation focuses on clarity and correctness of the PKCS#7
+//!   standard. It's suitable for educational and straightforward practical
+//!   applications. For high-performance requirements, further optimizations
+//!   may be necessary.
+
 use std::error::Error;
 
 /// Apply PKCS#7 padding to a given byte array, in-place.

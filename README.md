@@ -48,6 +48,14 @@ suitable for a range of cryptographic applications.
 
 ## Usage
 
+To use `soft-aes` in your Rust project, add it as a dependency in your
+`Cargo.toml` file:
+
+```toml
+[dependencies]
+soft-aes = "0.1.0"
+```
+
 This library is designed for straightforward integration into cryptographic
 applications, especially those requiring AES encryption and decryption. Below
 are basic usage examples for different components of the library.

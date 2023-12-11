@@ -163,3 +163,104 @@ fn mul(a: u8, b: u8) -> u8 {
         0
     }
 }
+
+/// Expand an AES key into a buffer of round keys.
+///
+/// This function takes an initial key and expands it into a series of round
+/// keys, which are used in each round of the AES encryption/decryption process.
+/// The expanded keys are stored in a single contiguous byte buffer, as opposed
+/// to the more common approach of organizing them into an array of arrays,
+/// where each sub-array represents a round key.
+///
+/// # Parameters
+///
+/// * `key`: A slice containing the initial AES key. Its length can be either
+///          16, 24, or 32 bytes, corresponding to AES-128, AES-192, and
+///          AES-256, respectively.
+/// * `nk`: The number of 4-byte words in the original key. This is 4 for
+///         AES-128, 6 for AES-192, and 8 for AES-256.
+/// * `nr`: The number of rounds in the AES cipher, which depends on the key
+///         size. This is 10 for AES-128, 12 for AES-192, and 14 for AES-256.
+///
+/// # Returns
+///
+/// A `[u8; 240]` array containing the expanded keys. This size accommodates
+/// the largest key expansion (AES-256), which requires 15 round keys of 16
+/// bytes each.
+///
+/// # Note
+///
+/// The function works directly on a byte buffer, rather than using a
+/// `(MAX_ROUNDS+1)x4x4` array as traditionally specified in AES documentation.
+/// Each round key is a sequence of 16 bytes within this buffer. The
+/// organization of round keys in a single buffer can be more efficient for
+/// certain implementations, as it avoids the overhead of multi-dimensional
+/// array indexing.
+fn expand_key(key: &[u8], nk: usize, nr: usize) -> [u8; 240] {
+    let mut expanded_key = [0u8; 240]; // Fixed buffer for expanded key
+    let mut temp = [0u8; 4]; // Temporary storage for key schedule
+
+    // Copy the initial key as the first round key
+    for i in 0..nk {
+        expanded_key[i * 4..(i + 1) * 4].copy_from_slice(&key[i * 4..(i + 1) * 4]);
+    }
+
+    let mut i = nk; // Initialize `i` to number of words in the original key
+
+    while i < NB * (nr + 1) {
+        // Load the last word from the previous round key into `temp`
+        for j in 0..4 {
+            temp[j] = expanded_key[(i - 1) * 4 + j];
+        }
+
+        if i % nk == 0 {
+            // Perform the RotWord operation for the first word in each new key
+            let k = temp[0];
+            temp.rotate_left(1); // Rotate the 4 bytes of the word to the left
+            temp[3] = k;
+
+            // SubWord operation: Substitute each byte in `temp` using the S-Box
+            for j in 0..4 {
+                temp[j] = S_BOX[temp[j] as usize];
+            }
+
+            // XOR the first byte of `temp` with the round constant (RCON)
+            temp[0] ^= RCON[i / nk];
+        } else if nk > 6 && i % nk == 4 {
+            // For AES-256, apply SubWord operation every fourth word
+            for j in 0..4 {
+                temp[j] = S_BOX[temp[j] as usize];
+            }
+        }
+
+        // Generate the next word of the round key
+        for j in 0..4 {
+            expanded_key[i * 4 + j] = expanded_key[(i - nk) * 4 + j] ^ temp[j];
+        }
+        i += 1;
+    }
+    expanded_key
+}
+
+/// Add a round key to the state using an XOR operation.
+///
+/// This function is a transformation in the cipher and inverse cipher where
+/// the round key is combined with the state.
+///
+/// # Parameters
+///
+/// * `round`: The current round number.
+/// * `state`: The current state of the cipher, represented as a mut 2D array.
+/// * `expanded_key`: The expanded key buffer containing all round keys.
+///
+/// # Note
+///
+/// The state is modified in place by applying the XOR operation with the
+/// corresponding round key from the expanded key buffer.
+fn add_round_key(round: usize, state: &mut [[u8; 4]; 4], expanded_key: &[u8; 240]) {
+    for i in 0..4 {
+        for j in 0..4 {
+            state[j][i] ^= expanded_key[round * NB * 4 + i * NB + j];
+        }
+    }
+}

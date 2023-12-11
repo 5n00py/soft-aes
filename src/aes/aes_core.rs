@@ -264,3 +264,47 @@ fn add_round_key(round: usize, state: &mut [[u8; 4]; 4], expanded_key: &[u8; 240
         }
     }
 }
+
+/// Perform the SubBytes tranformation in the AES encryption algorithm.
+///
+/// This function is a part of the AES encryption process where each byte
+/// in the state array is replaced with its corresponding value in the S-box.
+/// This substitution provides the non-linear transformation in the cipher.
+///
+/// # Parameters
+///
+/// * `state`: The current state of the cipher, represented as a mut 2D array.
+///
+/// # Note
+///
+/// The state is modified in place with the values from the S-box.
+fn sub_bytes(state: &mut [[u8; 4]; 4]) {
+    for i in 0..4 {
+        for j in 0..4 {
+            state[i][j] = S_BOX[state[i][j] as usize];
+        }
+    }
+}
+
+/// Perform the InvSubBytes (Inverse SubBytes) transformation in the AES
+/// decryption algorithm
+///
+/// This function is part of the AES decryption process where each byte
+/// in the state array is replaced with its corresponding value in the inverse
+/// S-box. This step reverses the non-linear transformation applied during
+/// the encryption process.
+///
+/// # Parameters
+///
+/// * `state`: The current state of the cipher, represented as a mut 2D array.
+///
+/// # Note
+///
+/// The state is modified in place with the values from the inverse S-box.
+fn inv_sub_bytes(state: &mut [[u8; 4]; 4]) {
+    for i in 0..4 {
+        for j in 0..4 {
+            state[i][j] = INV_S_BOX[state[i][j] as usize];
+        }
+    }
+}

@@ -382,3 +382,68 @@ fn inv_shift_rows(state: &mut [[u8; 4]; 4]) {
     state[3][2] = state[3][3];
     state[3][3] = temp;
 }
+
+/// Perform the MixColumns transformation for AES encryption
+///
+/// This function mixes the columns of the state matrix. Each column is
+/// transformed using a fixed polynomial over GF(256).
+///
+/// # Parameters
+///
+/// * `state`: The current state of the cipher, represented as a mut 2D array.
+///
+/// # Note
+///
+/// The state is modified in place with each column mixed accordingly.
+fn mix_columns(state: &mut [[u8; 4]; 4]) {
+    for i in 0..4 {
+        // Iterate over each column
+        let t = state[0][i];
+        let tmp = state[0][i] ^ state[1][i] ^ state[2][i] ^ state[3][i];
+
+        let mut tm = state[0][i] ^ state[1][i];
+        tm = mul(tm, 2);
+        state[0][i] ^= tm ^ tmp;
+
+        tm = state[1][i] ^ state[2][i];
+        tm = mul(tm, 2);
+        state[1][i] ^= tm ^ tmp;
+
+        tm = state[2][i] ^ state[3][i];
+        tm = mul(tm, 2);
+        state[2][i] ^= tm ^ tmp;
+
+        tm = state[3][i] ^ t;
+        tm = mul(tm, 2);
+        state[3][i] ^= tm ^ tmp;
+    }
+}
+
+/// Perform the InvMixColuns transformation for the AES decryption.
+///
+/// This function reverses the mixing of columns applied during the encryption.
+/// Each column is transformed using a fixed polynomial over GF(256) that is
+/// the inverse of the polynomial used in the encryption process.
+///
+/// # Parameters
+///
+/// * `state`: The current state of the cipher, represented as a mut 2D array.
+///
+/// # Note
+///
+/// The state is modified in place with each column mixed accordingly.
+fn inv_mix_columns(state: &mut [[u8; 4]; 4]) {
+    for i in 0..4 {
+        // Save original state for column i
+        let a = state[0][i];
+        let b = state[1][i];
+        let c = state[2][i];
+        let d = state[3][i];
+
+        // Perform the inverse mix column operation on each element of the column
+        state[0][i] = mul(a, 0x0e) ^ mul(b, 0x0b) ^ mul(c, 0x0d) ^ mul(d, 0x09);
+        state[1][i] = mul(a, 0x09) ^ mul(b, 0x0e) ^ mul(c, 0x0b) ^ mul(d, 0x0d);
+        state[2][i] = mul(a, 0x0d) ^ mul(b, 0x09) ^ mul(c, 0x0e) ^ mul(d, 0x0b);
+        state[3][i] = mul(a, 0x0b) ^ mul(b, 0x0d) ^ mul(c, 0x09) ^ mul(d, 0x0e);
+    }
+}

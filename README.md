@@ -29,4 +29,55 @@ suitable for a range of cryptographic applications.
 - **PKCS#7 Padding:** Support for PKCS#7 padding scheme to ensure uniform block
   sizes for encryption and decryption.
 
+## Usage
+
+This library is designed for straightforward integration into cryptographic
+applications, especially those requiring AES encryption and decryption. Below
+are basic usage examples for different components of the library.
+
+### AES ECB Mode
+
+```rust 
+use soft_aes::aes::{aes_enc_ecb, aes_dec_ecb};
+
+let plaintext = b"Example plaintext."; 
+let key = b"Very secret key."; 
+let padding = Some("PKCS7");
+
+let encrypted = aes_enc_ecb(plaintext, key, padding).expect("Encryption failed");
+let decrypted = aes_dec_ecb(&encrypted, key, padding).expect("Decryption failed");
+
+assert_eq!(decrypted, plaintext);
+```
+
+### AES CBC Mode
+
+```rust
+use soft_aes::aes::{aes_enc_cbc, aes_dec_cbc};
+
+let plaintext = b"Example plaintext.";
+let key = b"Very secret key.";
+let iv = b"Random Init Vec.";
+let padding = Some("PKCS7");
+
+let encrypted = aes_enc_cbc(plaintext, key, iv, padding).expect("Encryption failed");
+let decrypted = aes_dec_cbc(&encrypted, key, iv, padding).expect("Decryption failed");
+
+assert_eq!(decrypted, plaintext);
+```
+
+### PKCS#7 Padding
+
+```rust
+use soft_aes::padding::{pkcs7_pad, pkcs7_unpad};
+
+let mut data = vec![0x01, 0x02, 0x03];
+let block_size = 8;
+pkcs7_pad(&mut data, block_size).expect("Padding failed");
+assert_eq!(data, vec![0x01, 0x02, 0x03, 0x05, 0x05, 0x05, 0x05, 0x05]);
+
+pkcs7_unpad(&mut data).expect("Unpadding failed");
+assert_eq!(data, vec![0x01, 0x02, 0x03]);
+```
+
 

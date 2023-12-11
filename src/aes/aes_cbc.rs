@@ -1,3 +1,61 @@
+//! AES Encryption and Decryption in CBC Mode
+//!
+//! This module provides functionality for encrypting and decrypting data using
+//! the Advanced Encryption Standard (AES) in Cipher Block Chaining (CBC) mode.
+//! It includes support for optional padding, specifically PKCS#7 padding, to
+//! accommodate data that does not align with the AES block size.
+//!
+//! CBC mode is more secure than ECB mode as it uses an initialization vector (IV)
+//! to add randomness to the encryption process and chains the blocks together,
+//! ensuring identical plaintext blocks encrypt to different ciphertext blocks.
+//!
+//! # Features
+//!
+//! - `aes_enc_cbc`: Encrypts data using AES in CBC mode. It supports optional
+//!   PKCS#7 padding for data that is not a multiple of the AES block size.
+//!
+//! - `aes_dec_cbc`: Decrypts data that was encrypted using AES in CBC mode.
+//!   It also supports the removal of PKCS#7 padding if it was applied during
+//!   encryption.
+//!
+//! The implementation requires both an encryption key and an initialization
+//! vector (IV) of valid lengths for AES (128, 192, or 256 bits for the key,
+//! and 128 bits for the IV). This module closely integrates with the core AES
+//! functionalities and the PKCS#7 padding module to offer a comprehensive
+//! encryption/decryption experience.
+//!
+//! # Usage
+//!
+//! CBC mode is recommended for encrypting data of any significant length,
+//! especially where data patterns may be present. It provides stronger security
+//! guarantees compared to ECB mode due to the usage of an IV and block chaining.
+//!
+//! # Example
+//!
+//! Basic example of encrypting and decrypting data using AES-128 in CBC mode:
+//!
+//! ```
+//! use crate::soft_aes::aes::{aes_enc_cbc, aes_dec_cbc};
+//!
+//! let plaintext = b"Example plaintext.";
+//! let key = b"Very secret key.";
+//! let iv = b"Random Init Vec."; // 16 bytes IV for AES-128
+//! let padding = Some("PKCS7");
+//!
+//! let encrypted = aes_enc_cbc(plaintext, key, iv, padding).expect("Encryption failed");
+//! let decrypted = aes_dec_cbc(&encrypted, key, iv, padding).expect("Decryption failed");
+//!
+//! assert_eq!(decrypted, plaintext);
+//! ```
+//!
+//! # Disclaimer
+//!
+//! - While CBC mode adds significant security improvements over ECB mode, it is
+//!   still crucial to use it correctly. IV must be random and unique for each
+//!   encryption operation to maintain security. Additionally, it is important to
+//!   understand that CBC mode itself does not provide authentication or integrity
+//!   checks; these should be implemented separately if needed.
+
 use super::super::padding::*;
 use super::aes_core::*;
 

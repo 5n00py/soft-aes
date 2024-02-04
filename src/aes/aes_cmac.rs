@@ -82,8 +82,14 @@ const CONST_RB: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x87];
 /// - `key`: The 128-bit AES key.
 ///
 /// # Returns
-/// Returns a tuple of two 128-bit subkeys `(K1, K2)`.
+/// Returns a tuple of two 128-bit subkeys `(K1, K2)` or an error if the key is not
+/// 16 bytes long or the encryption fails.
 pub fn generate_subkey(key: &[u8]) -> Result<([u8; 16], [u8; 16]), Box<dyn Error>> {
+    // Check if the key length is 16 bytes (128 bit)
+    if key.len() != 16 {
+        return Err("ERROR AES-CMAC: The key must be exactly 128 bits (16 bytes) long".into());
+    }
+
     // Step 1: L := AES-128(K, const_Zero)
     let l = aes_enc_block(&CONST_ZERO, key)?;
 
@@ -127,11 +133,6 @@ pub fn generate_subkey(key: &[u8]) -> Result<([u8; 16], [u8; 16]), Box<dyn Error
 ///
 /// Returns an error if any cryptographic operation fails or the key is not 16 bytes long.
 pub fn aes_cmac(message: &[u8], key: &[u8]) -> Result<[u8; 16], Box<dyn Error>> {
-    // Check if the key length is 16 bytes (128 bit)
-    if key.len() != 16 {
-        return Err("ERROR AES-CMAC: The key must be exactly 128 bits (16 bytes) long".into());
-    }
-
     // Step 1: Generate the subkeys K1 and K2.
     let (k1, k2) = generate_subkey(key)?;
 

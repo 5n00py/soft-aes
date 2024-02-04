@@ -1,3 +1,73 @@
+//! AES-CMAC (Cipher-based Message Authentication Code) Implementation
+//!
+//! This module provides functionality for computing the AES-CMAC, a message authentication code
+//! based on AES and the CMAC algorithm, as specified in RFC 4493. AES-CMAC is designed to provide
+//! stronger assurance of data integrity than traditional checksums or error-detecting codes,
+//! effectively detecting both accidental and intentional unauthorized data modifications.
+//!
+//! AES-CMAC is based on the Advanced Encryption Standard (AES) and is equivalent to the One-Key
+//! CBC MAC1 (OMAC1), an improvement over eXtended Cipher Block Chaining mode (XCBC) and the basic
+//! Cipher Block Chaining-Message Authentication Code (CBC-MAC). This algorithm achieves a security
+//! goal similar to HMAC but uses AES, making it more appropriate in systems where AES is more
+//! readily available than hash functions.
+//!
+//! The implementation focuses on AES-CMAC with a 128-bit key (AES-128), providing a secure method
+//! to authenticate messages. It is particularly useful in scenarios where data integrity and
+//! authenticity are of high importance and where AES is a preferred choice over hash-based MACs
+//! like HMAC.
+//!
+//! # Features
+//!
+//! - `aes_cmac`: Computes the AES-CMAC for a given message and a 128-bit AES key.
+//!
+//! - `generate_subkey`: Generates subkeys used in the CMAC algorithm from a given AES key.
+//!
+//! # Usage
+//!
+//! AES-CMAC is suitable for various cryptographic applications, especially in systems where AES is
+//! preferred or more efficient than hash functions. It provides strong authentication and is
+//! simpler to implement in environments where AES is already available.
+//!
+//! # Example
+//!
+//! Compute the AES-CMAC for a specific message and key as per RFC 4493 test vector:
+//!
+//! ```
+//! use crate::soft_aes::aes::aes_cmac;
+//! use hex::decode as hex_decode;
+//!
+//! // Key and message are given in hexadecimal format
+//! let key = hex_decode("2b7e151628aed2a6abf7158809cf4f3c").unwrap();
+//! let message = hex_decode("6bc1bee22e409f96e93d7e117393172a").unwrap();
+//!
+//! let mac = aes_cmac(&message, &key).unwrap();
+//!
+//! // The resulting MAC should match the specified test vector
+//! assert_eq!(
+//!     mac.to_vec(),
+//!     hex_decode("070a16b46b4d4144f79bdd9dd04a287c").unwrap()
+//! );
+//! ```
+//!
+//! This example uses the `hex_decode` function from the `hex` crate to convert the hexadecimal strings
+//! into byte arrays for the key and message. The resulting MAC is then compared against the expected value
+//! from the test vector.
+//!
+//! # References
+//!
+//! - RFC 4493: The AES-CMAC Algorithm
+//!   [https://www.rfc-editor.org/rfc/rfc4493]
+//! - NIST Publication on Recommendation for Key Derivation: [https://csrc.nist.gov/pubs/sp/800/108/r1/upd1/final]
+//! - Related cryptographic standards: OMAC1, XCBC, CBC-MAC
+//!
+//! # Disclaimer
+//!
+//! - While AES-CMAC provides strong data integrity assurance, it is important to use it
+//!   correctly. Ensure that keys are securely managed and never reused across different
+//!   security contexts.
+//!
+//! - This implementation aims for clarity and adherence to the standard. For high-performance
+//!   requirements, further optimizations may be necessary.
 use super::aes_core::*;
 use crate::padding::pad_80;
 

@@ -11,14 +11,14 @@
 //! goal similar to HMAC but uses AES, making it more appropriate in systems where AES is more
 //! readily available than hash functions.
 //!
-//! The implementation focuses on AES-CMAC with a 128-bit key (AES-128), providing a secure method
-//! to authenticate messages. It is particularly useful in scenarios where data integrity and
-//! authenticity are of high importance and where AES is a preferred choice over hash-based MACs
-//! like HMAC.
+//! The implementation focuses on AES-CMAC with a 128-bit key (AES-128), a 192-bit key (AES-192)
+//! or a 256-bit key (AES-256), providing a secure method to authenticate messages. It is
+//! particularly useful in scenarios where data integrity and authenticity are of high importance
+//! and where AES is a preferred choice over hash-based MACs like HMAC.
 //!
 //! # Features
 //!
-//! - `aes_cmac`: Computes the AES-CMAC for a given message and a 128-bit AES key.
+//! - `aes_cmac`: Computes the AES-CMAC for a given message and an AES key.
 //!
 //! - `generate_subkey`: Generates subkeys used in the CMAC algorithm from a given AES key.
 //!
@@ -57,7 +57,8 @@
 //!
 //! - RFC 4493: The AES-CMAC Algorithm
 //!   [https://www.rfc-editor.org/rfc/rfc4493]
-//! - NIST Publication on Recommendation for Key Derivation: [https://csrc.nist.gov/pubs/sp/800/108/r1/upd1/final]
+//! - NIST SP 800-38B: Recommendation for Block Cipher Modes of Operation:
+//!   [https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38b.pdf]
 //! - Related cryptographic standards: OMAC1, XCBC, CBC-MAC
 //!
 //! # Disclaimer
@@ -79,17 +80,12 @@ const CONST_RB: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x87];
 /// Generate subkeys for AES-CMAC.
 ///
 /// # Parameters
-/// - `key`: The 128-bit AES key.
+/// - `key`: AES-128, AES-192 or AES-256 key.
 ///
 /// # Returns
-/// Returns a tuple of two 128-bit subkeys `(K1, K2)` or an error if the key is not
-/// 16 bytes long or the encryption fails.
+/// Returns a tuple of two 128-bit subkeys `(K1, K2)` or an error if
+/// the encryption fails.
 pub fn generate_subkey(key: &[u8]) -> Result<([u8; 16], [u8; 16]), Box<dyn Error>> {
-    // Check if the key length is 16 bytes (128 bit)
-    if key.len() != 16 {
-        return Err("ERROR AES-CMAC: The key must be exactly 128 bits (16 bytes) long".into());
-    }
-
     // Step 1: L := AES-128(K, const_Zero)
     let l = aes_enc_block(&CONST_ZERO, key)?;
 
@@ -123,7 +119,7 @@ pub fn generate_subkey(key: &[u8]) -> Result<([u8; 16], [u8; 16]), Box<dyn Error
 /// # Arguments
 ///
 /// * `message` - The message for which to compute the MAC.
-/// * `key` - The 128-bit AES key.
+/// * `key` - AES-128, AES-192 or AES-256 key.
 ///
 /// # Returns
 ///
@@ -131,7 +127,7 @@ pub fn generate_subkey(key: &[u8]) -> Result<([u8; 16], [u8; 16]), Box<dyn Error
 ///
 /// # Errors
 ///
-/// Returns an error if any cryptographic operation fails or the key is not 16 bytes long.
+/// Returns an error if any cryptographic operation fails.
 pub fn aes_cmac(message: &[u8], key: &[u8]) -> Result<[u8; 16], Box<dyn Error>> {
     // Step 1: Generate the subkeys K1 and K2.
     let (k1, k2) = generate_subkey(key)?;

@@ -193,9 +193,10 @@ implementation I implemented during my studies, primarily guided by the book
 Design of Rijndael: AES - The Advanced Encryption Standard" by Joan Daemen and
 Vincent Rijmen.
 
-Furthermore AI assistance was used in documenting, commenting and
-troubleshooting aspects of the library and
-[SmartCommit](https://github.com/5n00py/SmartCommit) as commit assistant.
+Additionally, AI assistance was utilized for documenting, commenting, and
+troubleshooting various aspects of the library and
+[SmartCommit](https://github.com/5n00py/SmartCommit) served as commit
+assistant.
 
 ## Related Projects
 
@@ -218,5 +219,5 @@ for performing AES encryption and decryption tests in the browser.
 
 Copyright David Schmid (david.schmid@mailbox.org)
 
-Binaries are subject to the terms of the GNU General Public License Version 3
-(GPLv3), as detailed in the [LICENSE](LICENSE) file.
+The binaries are distributed under the terms of the GNU General Public License
+Version 3 (GPLv3), as detailed in the [LICENSE](LICENSE) file.

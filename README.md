@@ -26,8 +26,8 @@ concern.
 - [Usage](#usage)
   - [AES ECB Mode](#aes-ecb-mode)
   - [AES CBC Mode](#aes-cbc-mode)
+  - [AES CMAC](#aes-cmac)
   - [PKCS#7 Padding](#pkcs7-padding)
-  - [0x80 Padding](#0x80-padding)
 - [Testing](#testing)
   - [Current NIST Test Coverage](#current-nist-test-coverage)
   - [Core Unit Tests](#core-unit-tests)
@@ -49,7 +49,8 @@ concern.
 - **ECB Mode:** Simple block-wise encryption and decryption without chaining.
 - **CBC Mode:** Improved block-wise encryption and decryption with
   Initialization Vector (IV) based chaining.
-- **AES-CMAC:** Message authentication capabilities based on AES-128.
+- **AES-CMAC:** Message authentication capabilities based on AES-128, AES-192
+  and AES-256.
 - **PKCS#7 Padding:** Support for PKCS#7 padding scheme to ensure uniform block
   sizes.
 - **0x80 Padding:** Support for `0x80` padding (ISO/IEC 9797-1 Padding Method
@@ -98,6 +99,22 @@ let encrypted = aes_enc_cbc(plaintext, key, iv, padding).expect("Encryption fail
 let decrypted = aes_dec_cbc(&encrypted, key, iv, padding).expect("Decryption failed");
 
 assert_eq!(decrypted, plaintext);
+```
+
+### AES CMAC 
+
+```rust
+use soft_aes::aes::aes_cmac;
+use hex::decode as hex_decode;
+
+let key = hex_decode("603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4").unwrap();
+let message = hex_decode("6BC1BEE22E409F96E93D7E117393172AAE2D8A57").unwrap();
+let mac = aes_cmac(&message, &key).unwrap();
+
+assert_eq!(
+    mac.to_vec(),
+    hex_decode("156727DC0878944A023C1FE03BAD6D93").unwrap()
+);
 ```
 
 ### PKCS#7 Padding
@@ -155,8 +172,14 @@ scenarios.
 
 - AES-CMAC is defined in [RFC 4493](https://www.rfc-editor.org/rfc/rfc4493).
 
+- AES-CMAC for different key lengths is defined in [NIST SP
+  800-38B](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38b.pdf).
+
 - PKCS#7 padding is defined in [RFC
   2315](https://www.rfc-editor.org/rfc/rfc2315).
+
+- 0x80 padding is defined in [ISO/IEC 9797-1 padding method
+  2](https://www.iso.org/standard/50375.html).
 
 ## Acknowledgments
 
@@ -184,7 +207,7 @@ WebAssembly (Wasm). This project enables AES encryption and
 decryption directly in web applications by providing a Wasm interface for
 `Soft-AES`.
 
-### Web UI for AES Encryption/Decryption
+### Web UI 
 
 For a practical and user-friendly implementation of AES directly in the
 browser, visit [AES-Wasm Tool](https://jointech.at/tools/aes-wasm/index.html).

@@ -1,5 +1,7 @@
 use super::super::aes_cbc::*;
 
+use hex;
+
 #[test]
 fn test_aes_enc_cbc_no_padding() {
     // Define the plaintext, key, IV, and expected ciphertext as byte arrays
@@ -159,4 +161,43 @@ fn test_aes_dec_cbc_error_invalid_ciphertext_length() {
             "AES DEC CBC Error: Ciphertext must be a multiple of AES_BLOCK_SIZE"
         );
     }
+}
+
+#[test]
+fn test_aes_enc_cbc_with_80_padding() {
+    let plaintext = hex::decode("FFFFFFFFFFFFFFFF").unwrap();
+    let key = hex::decode("00112233445566778899AABBCCDDEEFF").unwrap();
+    let iv = hex::decode("00112233445566778899AABBCCDDEEFF").unwrap();
+    let expected_ciphertext = hex::decode("8C9D8A1544C87C97ED44C81382B7FBA7").unwrap();
+
+    let iv_array: [u8; 16] = iv.try_into().expect("Invalid IV length");
+
+    let ciphertext =
+        aes_enc_cbc(&plaintext, &key, &iv_array, Some("0x80")).expect("Encryption failed");
+
+    assert_eq!(
+        ciphertext, expected_ciphertext,
+        "Ciphertext does not match expected value with 0x80 padding"
+    );
+}
+
+#[test]
+fn test_aes_dec_cbc_with_80_padding_removal() {
+    let ciphertext = hex::decode("8C9D8A1544C87C97ED44C81382B7FBA7").unwrap();
+    let key = hex::decode("00112233445566778899AABBCCDDEEFF").unwrap();
+    let iv = hex::decode("00112233445566778899AABBCCDDEEFF").unwrap();
+    let expected_plaintext = hex::decode("FFFFFFFFFFFFFFFF").unwrap();
+
+    let iv_array: [u8; 16] = iv.try_into().expect("Invalid IV length");
+
+    let plaintext =
+        aes_dec_cbc(&ciphertext, &key, &iv_array, Some("0x80")).expect("Decryption failed");
+
+    // Truncate the plaintext to the original length for comparison
+    let truncated_plaintext = &plaintext[..expected_plaintext.len()];
+
+    assert_eq!(
+        truncated_plaintext, expected_plaintext,
+        "Decrypted plaintext does not match expected value with 0x80 padding removal"
+    );
 }

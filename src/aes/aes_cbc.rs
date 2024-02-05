@@ -2,8 +2,8 @@
 //!
 //! This module provides functionality for encrypting and decrypting data using
 //! the Advanced Encryption Standard (AES) in Cipher Block Chaining (CBC) mode.
-//! It includes support for optional padding, specifically PKCS#7 padding, to
-//! accommodate data that does not align with the AES block size.
+//! It includes support for optional PKCS#7 padding and 0x80 (ISO/IEC 9797-1)
+//! padding, to accommodate data that does not align with the AES block size.
 //!
 //! CBC mode is more secure than ECB mode as it uses an initialization vector (IV)
 //! to add randomness to the encryption process and chains the blocks together,
@@ -12,10 +12,10 @@
 //! # Features
 //!
 //! - `aes_enc_cbc`: Encrypts data using AES in CBC mode. It supports optional
-//!   PKCS#7 padding for data that is not a multiple of the AES block size.
+//!   PKCS#7 and 0x80 padding for data that is not a multiple of the AES block size.
 //!
 //! - `aes_dec_cbc`: Decrypts data that was encrypted using AES in CBC mode.
-//!   It also supports the removal of PKCS#7 padding if it was applied during
+//!   It also supports the removal of PKCS#7 or 0x80 padding if it was applied during
 //!   encryption.
 //!
 //! The implementation requires both an encryption key and an initialization
@@ -59,36 +59,41 @@
 use super::super::padding::*;
 use super::aes_core::*;
 
+use std::error::Error;
+
 /// Encrypt data using AES in CBC mode with optional padding.
 ///
 /// # Parameters
 /// - `plaintext`: The data to encrypt. It should be a multiple of
-///                `AES_BLOCK_SIZE` unless PKCS7 padding is applied.
+///                `AES_BLOCK_SIZE` unless padding is applied.
 /// - `key`: The encryption key.
 /// - `iv`: The initialization vector (IV) for CBC mode.
-/// - `padding`: Optional padding method. Supported values are `None` (default)
-///              and `PKCS7`.
+/// - `padding`: Optional padding method. Supported values are `None` (default),
+///              `PKCS7`, and `0x80`.
 ///
 /// # Returns
-/// Returns a `Result<Vec<u8>, Box<dyn std::error::Error>>` containing the
-/// encrypted data or an error.
+/// Returns a `Result<Vec<u8>, Box<dyn Error>>` containing the encrypted data
+/// or an error.
 pub fn aes_enc_cbc(
     plaintext: &[u8],
     key: &[u8],
     iv: &[u8; AES_BLOCK_SIZE],
     padding: Option<&str>,
-) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+) -> Result<Vec<u8>, Box<dyn Error>> {
     let block_size = AES_BLOCK_SIZE;
     let mut data = plaintext.to_vec();
 
     // Apply padding if necessary
-    if let Some("PKCS7") = padding {
-        pkcs7_pad(&mut data, block_size)?;
-    } else if data.len() % block_size != 0 {
-        return Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            "AES ENC CBC Error: Plaintext must be a multiple of AES_BLOCK_SIZE for 'None' padding",
-        )));
+    match padding {
+        Some("PKCS7") => pkcs7_pad(&mut data, block_size)?,
+        Some("0x80") => pad_80(&mut data, block_size)?,
+        None if data.len() % block_size != 0 => {
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "AES ENC CBC Error: Plaintext must be a multiple of AES_BLOCK_SIZE for 'None' padding",
+            )));
+        }
+        _ => {}
     }
 
     let mut ciphertext = Vec::with_capacity(data.len());
@@ -119,8 +124,8 @@ pub fn aes_enc_cbc(
 ///                 `AES_BLOCK_SIZE`.
 /// - `key`: The decryption key.
 /// - `iv`: The initialization vector (IV) used during encryption for CBC mode.
-/// - `padding`: Optional padding method used during encryption. Supported value
-///              is `PKCS7` for removing padding after decryption.
+/// - `padding`: Optional padding method used during encryption. Supported values
+///              are `None` (default), `PKCS7`, and `0x80`.
 ///
 /// # Returns
 /// Returns a `Result<Vec<u8>, Box<dyn std::error::Error>>` containing the
@@ -130,7 +135,7 @@ pub fn aes_dec_cbc(
     key: &[u8],
     iv: &[u8; AES_BLOCK_SIZE],
     padding: Option<&str>,
-) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+) -> Result<Vec<u8>, Box<dyn Error>> {
     if ciphertext.len() % AES_BLOCK_SIZE != 0 {
         return Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::InvalidInput,
@@ -156,9 +161,11 @@ pub fn aes_dec_cbc(
         previous_block.copy_from_slice(block);
     }
 
-    // Remove PKCS7 padding if it was used during encryption
-    if let Some("PKCS7") = padding {
-        pkcs7_unpad(&mut plaintext)?;
+    // Remove padding if it was used during encryption
+    match padding {
+        Some("PKCS7") => pkcs7_unpad(&mut plaintext)?,
+        Some("0x80") => unpad_80(&mut plaintext)?,
+        _ => {}
     }
 
     Ok(plaintext)

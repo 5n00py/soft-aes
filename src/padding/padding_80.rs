@@ -1,8 +1,60 @@
-//! 0x80 Padding Module
+//! 0x80 Padding Module (ISO/IEC 9797-1 Padding Method 2)
 //!
 //! This module provides functionality for applying and removing 0x80 padding
-//! to and from byte arrays. The padding scheme appends a single 0x80 byte
-//! followed by 0x00 bytes until the data length aligns with a specified block size.
+//! to and from byte arrays, aligning with ISO/IEC 9797-1 padding method 2.
+//! This padding scheme is commonly used in cryptographic protocols and involves
+//! appending a byte with the value 0x80 (binary 1000 0000) followed by as many
+//! zero bytes (0x00) as needed to fill the last block to a specified block size.
+//!
+//! This method ensures that the padded message is always of a length that is a
+//! multiple of the block size, which is crucial for block cipher operations in
+//! cryptographic algorithms. The distinct 0x80 byte guarantees that the padding
+//! is unambiguous, ensuring reliable padding removal.
+//!
+//! # Features
+//!
+//! - `pad_80`: Applies 0x80 padding to a byte array, extending its size to a multiple
+//!   of the specified block size.
+//!
+//! - `unpad_80`: Removes 0x80 padding from a byte array, reverting it to its original
+//!   unpadded state.
+//!
+//! # Usage
+//!
+//! This padding scheme is particularly useful in cryptographic applications where
+//! the input data size must align with the block size of a block cipher algorithm,
+//! such as AES. It can be employed in various scenarios, including encryption and
+//! message authentication code (MAC) generation.
+//!
+//! # Examples
+//!
+//! Basic usage examples demonstrating padding and unpadding a byte array:
+//!
+//! ```
+//! use soft_aes::padding::{pad_80, unpad_80};
+//!
+//! let mut data = vec![0x01, 0x02, 0x03];
+//! let block_size = 8;
+//! pad_80(&mut data, block_size).expect("Padding failed");
+//!
+//! // Data is now padded according to ISO/IEC 9797-1 Padding Method 2
+//! assert_eq!(data, vec![0x01, 0x02, 0x03, 0x80, 0x00, 0x00, 0x00, 0x00]);
+//!
+//! unpad_80(&mut data).expect("Unpadding failed");
+//!
+//! // Data is back to its original form
+//! assert_eq!(data, vec![0x01, 0x02, 0x03]);
+//! ```
+//!
+//! # References
+//!
+//! - ISO/IEC 9797-1: Information technology – Security techniques – Message Authentication Codes (MACs) –
+//!   Part 1: Mechanisms using a block cipher
+//!
+//! # Disclaimer
+//!
+//! - This implementation focuses on clarity and correctness as per ISO/IEC 9797-1 Padding Method 2.
+//!   For high-performance requirements, additional optimizations may be necessary.
 
 use std::error::Error;
 

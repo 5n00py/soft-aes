@@ -1,4 +1,5 @@
 use super::super::aes_ecb::*;
+use hex::decode as hex_decode;
 
 #[test]
 fn test_aes_enc_ecb_no_padding() {
@@ -109,5 +110,36 @@ fn test_aes_dec_ecb_with_pkcs7_padding_removal() {
     assert_eq!(
         plaintext, expected_plaintext,
         "Decrypted plaintext does not match expected value"
+    );
+}
+
+#[test]
+fn test_aes_enc_ecb_with_80_padding() {
+    let plaintext = hex_decode("FFFFFFFFFFFFFFFF").unwrap();
+    let key = hex_decode("00112233445566778899AABBCCDDEEFF").unwrap();
+    let expected_ciphertext = hex_decode("F8CA20FB687D85A6666460654527E3C3").unwrap();
+
+    let ciphertext = aes_enc_ecb(&plaintext, &key, Some("0x80")).expect("Encryption failed");
+
+    assert_eq!(
+        ciphertext, expected_ciphertext,
+        "Ciphertext does not match expected value with 0x80 padding"
+    );
+}
+
+#[test]
+fn test_aes_dec_ecb_with_80_padding_removal() {
+    let ciphertext = hex_decode("F8CA20FB687D85A6666460654527E3C3").unwrap();
+    let key = hex_decode("00112233445566778899AABBCCDDEEFF").unwrap();
+    let expected_plaintext = hex_decode("FFFFFFFFFFFFFFFF").unwrap(); // Original plaintext before padding
+
+    let plaintext = aes_dec_ecb(&ciphertext, &key, Some("0x80")).expect("Decryption failed");
+
+    // Truncate the plaintext to the original length for comparison
+    let truncated_plaintext = &plaintext[..expected_plaintext.len()];
+
+    assert_eq!(
+        truncated_plaintext, expected_plaintext,
+        "Decrypted plaintext does not match expected value with 0x80 padding removal"
     );
 }
